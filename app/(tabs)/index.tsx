@@ -3,6 +3,7 @@ import {
   View,
   TextInput,
   TouchableOpacity,
+  FlatList,
   StyleSheet,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -107,10 +108,13 @@ export default function HomeScreen() {
       </View>
 
       {/* Dynamic task list */}
-      <View style={styles.taskList}>
-        {tasks.map((item) => (
+      <FlatList
+        style={styles.taskListContainer}
+        contentContainerStyle={styles.taskList}
+        data={tasks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
           <TouchableOpacity
-            key={item.id}
             style={styles.taskRow}
             onPress={() => toggleTask(item)}
             onLongPress={() => deleteTask(item.id)}
@@ -125,8 +129,8 @@ export default function HomeScreen() {
               {item.title}
             </ThemedText>
           </TouchableOpacity>
-        ))}
-      </View>
+        )}
+      />
     </ThemedView>
   );
 }
@@ -176,6 +180,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 3,
+  },
+  taskListContainer: {
+    flex: 1,
   },
   taskList: {
     marginTop: 24,
