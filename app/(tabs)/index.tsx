@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  TextInput,
-  TouchableOpacity,
-  FlatList,
-  StyleSheet,
-} from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
+import { View, FlatList, StyleSheet } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { supabase } from '../../lib/supabase.js';
+import TaskForm from '@/components/TaskForm';
+import TaskItem from '@/components/TaskItem';
 
 type Task = {
   id: string;
@@ -41,6 +36,7 @@ export default function HomeScreen() {
   }, []);
 
   const addTask = async () => {
+    console.log('addTask fired, task =', JSON.stringify(task));
     if (task.trim() === '') return;
 
     const { error } = await supabase
@@ -94,18 +90,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Add task row */}
-      <View style={styles.addRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="Enter Task"
-          placeholderTextColor="#9AA0A6"
-          value={task}
-          onChangeText={setTask}
-        />
-        <TouchableOpacity style={styles.addButton} onPress={addTask}>
-          <MaterialIcons name="add" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-      </View>
+      <TaskForm task={task} setTask={setTask} onAdd={addTask} />
 
       {/* Dynamic task list */}
       <FlatList
@@ -114,21 +99,7 @@ export default function HomeScreen() {
         data={tasks}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <TouchableOpacity
-            style={styles.taskRow}
-            onPress={() => toggleTask(item)}
-            onLongPress={() => deleteTask(item.id)}
-          >
-            <MaterialIcons
-              name={item.completed ? 'check-box' : 'check-box-outline-blank'}
-              size={22}
-              color="#4A4A4A"
-              style={styles.checkboxIcon}
-            />
-            <ThemedText style={styles.taskText} lightColor="#1C1C1E" darkColor="#1C1C1E">
-              {item.title}
-            </ThemedText>
-          </TouchableOpacity>
+          <TaskItem item={item} onToggle={toggleTask} onDelete={deleteTask} />
         )}
       />
     </ThemedView>
@@ -152,56 +123,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  addRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    marginTop: 8,
-  },
-  input: {
-    flex: 1,
-    height: 48,
-    backgroundColor: '#F2F2F7',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: '#1C1C1E',
-    marginRight: 12,
-  },
-  addButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    backgroundColor: '#4A6CF7',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#4A6CF7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
   taskListContainer: {
     flex: 1,
   },
   taskList: {
     marginTop: 24,
     paddingHorizontal: 20,
-  },
-  taskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#F9F9FB',
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    marginBottom: 12,
-  },
-  checkboxIcon: {
-    marginRight: 12,
-  },
-  taskText: {
-    fontSize: 16,
-    fontWeight: '500',
   },
 });
