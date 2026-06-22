@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   TextInput,
@@ -10,6 +10,22 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 
 export default function HomeScreen() {
+  const [task, setTask] = useState('');
+  const [tasks, setTasks] = useState([
+    { id: '1', title: 'Study React Native', completed: false },
+    { id: '2', title: 'Finish Assignment', completed: false },
+  ]);
+
+  const handleAddTask = () => {
+    if (task.trim() === '') return;
+
+    setTasks((prev) => [
+      ...prev,
+      { id: Date.now().toString(), title: task, completed: false },
+    ]);
+    setTask('');
+  };
+
   return (
     <ThemedView style={styles.container} lightColor="#FFFFFF" darkColor="#FFFFFF">
       {/* Header */}
@@ -25,37 +41,29 @@ export default function HomeScreen() {
           style={styles.input}
           placeholder="Enter Task"
           placeholderTextColor="#9AA0A6"
+          value={task}
+          onChangeText={setTask}
         />
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
           <MaterialIcons name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
 
-      {/* Static task list */}
+      {/* Dynamic task list */}
       <View style={styles.taskList}>
-        <View style={styles.taskRow}>
-          <MaterialIcons
-            name="check-box-outline-blank"
-            size={22}
-            color="#4A4A4A"
-            style={styles.checkboxIcon}
-          />
-          <ThemedText style={styles.taskText} lightColor="#1C1C1E" darkColor="#1C1C1E">
-            Study React Native
-          </ThemedText>
-        </View>
-
-        <View style={styles.taskRow}>
-          <MaterialIcons
-            name="check-box-outline-blank"
-            size={22}
-            color="#4A4A4A"
-            style={styles.checkboxIcon}
-          />
-          <ThemedText style={styles.taskText} lightColor="#1C1C1E" darkColor="#1C1C1E">
-            Finish Assignment
-          </ThemedText>
-        </View>
+        {tasks.map((item) => (
+          <View key={item.id} style={styles.taskRow}>
+            <MaterialIcons
+              name="check-box-outline-blank"
+              size={22}
+              color="#4A4A4A"
+              style={styles.checkboxIcon}
+            />
+            <ThemedText style={styles.taskText} lightColor="#1C1C1E" darkColor="#1C1C1E">
+              {item.title}
+            </ThemedText>
+          </View>
+        ))}
       </View>
     </ThemedView>
   );
