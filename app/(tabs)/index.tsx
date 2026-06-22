@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   TextInput,
@@ -8,22 +8,79 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
+import { supabase } from '../../lib/supabase.js';
+
+type Task = {
+  id: string;
+  title: string;
+  completed: boolean;
+  created_at?: string;
+};
 
 export default function HomeScreen() {
   const [task, setTask] = useState('');
-  const [tasks, setTasks] = useState([
-    { id: '1', title: 'Study React Native', completed: false },
-    { id: '2', title: 'Finish Assignment', completed: false },
-  ]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
-  const handleAddTask = () => {
+  const loadTasks = async () => {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    setTasks(data);
+  };
+
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  const addTask = async () => {
     if (task.trim() === '') return;
 
-    setTasks((prev) => [
-      ...prev,
-      { id: Date.now().toString(), title: task, completed: false },
-    ]);
+    const { error } = await supabase
+      .from('tasks')
+      .insert({ title: task, completed: false });
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
     setTask('');
+    loadTasks();
+  };
+
+  const toggleTask = async (item: Task) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ completed: !item.completed })
+      .eq('id', item.id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    loadTasks();
+  };
+
+  const deleteTask = async (id: string) => {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    loadTasks();
   };
 
   return (
@@ -44,7 +101,7 @@ export default function HomeScreen() {
           value={task}
           onChangeText={setTask}
         />
-        <TouchableOpacity style={styles.addButton} onPress={handleAddTask}>
+        <TouchableOpacity style={styles.addButton} onPress={addTask}>
           <MaterialIcons name="add" size={24} color="#FFFFFF" />
         </TouchableOpacity>
       </View>
@@ -52,9 +109,14 @@ export default function HomeScreen() {
       {/* Dynamic task list */}
       <View style={styles.taskList}>
         {tasks.map((item) => (
-          <View key={item.id} style={styles.taskRow}>
+          <TouchableOpacity
+            key={item.id}
+            style={styles.taskRow}
+            onPress={() => toggleTask(item)}
+            onLongPress={() => deleteTask(item.id)}
+          >
             <MaterialIcons
-              name="check-box-outline-blank"
+              name={item.completed ? 'check-box' : 'check-box-outline-blank'}
               size={22}
               color="#4A4A4A"
               style={styles.checkboxIcon}
@@ -62,7 +124,7 @@ export default function HomeScreen() {
             <ThemedText style={styles.taskText} lightColor="#1C1C1E" darkColor="#1C1C1E">
               {item.title}
             </ThemedText>
-          </View>
+          </TouchableOpacity>
         ))}
       </View>
     </ThemedView>
